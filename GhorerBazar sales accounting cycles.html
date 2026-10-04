@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GhorerBazar sales accounting cycles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F4; --sheet:#FFFFFF; --ink:#18231E; --muted:#56655D; --faint:#8A978F;
+  --rule:#D9E0DB; --rule-strong:#B8C4BC;
+  --ledger:#1E5A43; --ledger-soft:#E3EFE8;
+  --dr:#1E5A43; --cr:#9A5317; --cr-soft:#F6EADF;
+  --warn:#8A5A00; --warn-soft:#FBF0D6;
+  --ok:#227A4E; --ok-soft:#E1F2E8;
+  --focus:#2F6FDB;
+  --font:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --font-cond:"IBM Plex Sans Condensed","IBM Plex Sans","Arial Narrow",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111714; --sheet:#18201C; --ink:#E6ECE8; --muted:#A3B1A9; --faint:#76847C;
+    --rule:#2A3530; --rule-strong:#3B4A42;
+    --ledger:#7FC7A4; --ledger-soft:#1C3329;
+    --dr:#7FC7A4; --cr:#E9A86C; --cr-soft:#3A2A1C;
+    --warn:#F0C766; --warn-soft:#3A3018;
+    --ok:#7FD3A5; --ok-soft:#1B3428;
+    --focus:#7FA8F0;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111714; --sheet:#18201C; --ink:#E6ECE8; --muted:#A3B1A9; --faint:#76847C;
+  --rule:#2A3530; --rule-strong:#3B4A42;
+  --ledger:#7FC7A4; --ledger-soft:#1C3329;
+  --dr:#7FC7A4; --cr:#E9A86C; --cr-soft:#3A2A1C;
+  --warn:#F0C766; --warn-soft:#3A3018;
+  --ok:#7FD3A5; --ok-soft:#1B3428;
+  --focus:#7FA8F0;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;font-variant-numeric:tabular-nums}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header.top{padding:40px 0 20px}
+header.top h1{font-family:var(--font-cond);font-weight:600;font-size:clamp(28px,4.4vw,42px);line-height:1.1;margin:0 0 10px;letter-spacing:-0.01em}
+header.top p{margin:0;color:var(--muted);max-width:68ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;font-size:13px;color:var(--muted)}
+.meta span b{color:var(--ink);font-weight:500}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--rule-strong)}
+.tablist{display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin;max-width:1040px;margin:0 auto;padding:0 20px}
+.tablist button{flex:0 0 auto;font:500 14px/1 var(--font);color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:14px 12px 11px;cursor:pointer;white-space:nowrap}
+.tablist button:hover{color:var(--ink)}
+.tablist button[aria-selected="true"]{color:var(--ledger);border-bottom-color:var(--ledger)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+main{padding:28px 0 64px}
+.panel[hidden]{display:none}
+h2{font-family:var(--font-cond);font-weight:600;font-size:26px;line-height:1.2;margin:0 0 8px}
+h3{font-size:17px;font-weight:600;margin:28px 0 10px}
+.lead{color:var(--muted);max-width:72ch;margin:0 0 20px}
+.scenario{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--ledger);border-radius:0;padding:12px 16px;margin:0 0 20px;font-size:15px}
+.cycle{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+@media (max-width:860px){.cycle{grid-template-columns:minmax(0,1fr)}}
+.step{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;margin:0 0 10px;cursor:pointer;display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 10px;text-align:left;width:100%;font:inherit;color:inherit}
+.step:hover{border-color:var(--rule-strong)}
+.step.future{opacity:.55}
+.step.cur{border-color:var(--ledger);box-shadow:0 0 0 1px var(--ledger)}
+.num{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--rule-strong);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--muted)}
+.step.done .num,.step.cur .num{background:var(--ledger);border-color:var(--ledger);color:var(--sheet)}
+.step-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;margin-bottom:6px}
+.step-title{font-weight:600}
+.trigger{font-size:13px;color:var(--muted)}
+.lines{grid-column:2;font-size:14px}
+.ln{display:grid;grid-template-columns:28px 46px minmax(0,1fr) 100px;gap:8px;padding:3px 0;border-top:1px dashed var(--rule)}
+.ln:first-child{border-top:0}
+.ln .side{font-weight:600}
+.ln.dr .side{color:var(--dr)} .ln.cr .side{color:var(--cr)}
+.ln.cr .acct{padding-left:18px}
+.ln .code{color:var(--muted)}
+.ln .amt{text-align:right}
+.noentry{font-size:14px;color:var(--muted);font-style:italic}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-left:6px;vertical-align:1px}
+.controls{display:flex;align-items:center;gap:8px;margin:6px 0 0}
+.btn{font:500 14px/1 var(--font);color:var(--ink);background:var(--sheet);border:1px solid var(--rule-strong);border-radius:8px;padding:9px 14px;cursor:pointer}
+.btn:hover{border-color:var(--ledger)}
+.pos{font-size:13px;color:var(--muted);margin-left:4px}
+aside.ledger{position:sticky;top:64px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:16px}
+@media (max-width:860px){aside.ledger{position:static}}
+aside.ledger h4{margin:0 0 10px;font-size:14px;font-weight:600}
+.bal{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--rule)}
+.bal:first-of-type{border-top:0}
+.bal .nm{font-size:13px;color:var(--muted)}
+.bal .nm b{display:block;color:var(--ink);font-weight:500}
+.bal .v{font-weight:600;white-space:nowrap;align-self:center}
+.bal .v.zero{color:var(--ok);background:var(--ok-soft);padding:2px 8px;border-radius:999px;font-size:13px}
+.totals{margin-top:12px;padding-top:12px;border-top:1px solid var(--rule-strong);font-size:13px;color:var(--muted);display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.totals .bal-ok{color:var(--ok);font-weight:600}
+.endnote{margin-top:14px;font-size:14px;background:var(--ledger-soft);padding:10px 12px;border-radius:8px}
+.endnote[hidden]{display:none}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--sheet)}
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;margin:0 0 8px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:13px;color:var(--muted);background:var(--paper)}
+tr:last-child td{border-bottom:0}
+td.miss{color:var(--cr);font-style:italic}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:0 0 24px}
+.pr{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+.pr h4{margin:0 0 6px;font-size:15px;font-weight:600}
+.pr p{margin:0;font-size:14px;color:var(--muted)}
+.cyclelinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.cyclelinks button{text-align:left;font:inherit;color:inherit;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;cursor:pointer}
+.cyclelinks button:hover{border-color:var(--ledger)}
+.cyclelinks b{display:block;font-weight:600;margin-bottom:2px}
+.cyclelinks span{font-size:13px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:14px;color:var(--muted);margin:8px 0 0}
+.legend b.dr{color:var(--dr)} .legend b.cr{color:var(--cr)}
+.check{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;margin:0 0 10px}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--ledger)}
+.check b{font-weight:600}
+.check .acc{font-size:13px;color:var(--muted)}
+.check p{margin:4px 0 0;font-size:14px}
+.check.done{border-color:var(--ok)}
+.progress{font-size:14px;color:var(--muted);margin:0 0 14px}
+.oq{border-left:4px solid var(--cr);background:var(--sheet);padding:10px 14px;margin:0 0 10px;border-radius:0}
+.oq b{font-weight:600}
+.oq p{margin:2px 0 0;font-size:14px;color:var(--muted)}
+footer{font-size:13px;color:var(--faint);padding:20px 0 40px;border-top:1px solid var(--rule)}
+@media print{
+  nav.tabs,.controls,.btn{display:none!important}
+  .panel[hidden]{display:block!important}
+  .panel{page-break-before:always}
+  .step.future{opacity:1}
+  aside.ledger{position:static}
+  body{background:#fff}
+}
+@media (prefers-reduced-motion:no-preference){.panel{animation:fade .18s ease-out}@keyframes fade{from{opacity:.4}to{opacity:1}}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <h1>GhorerBazar sales accounting cycles</h1>
+  <p>How each type of sale moves through the general ledger, from order to cash: e-commerce through couriers, corporate orders, and POS sales at the metro outlets.</p>
+  <div class="meta">
+    <span>Source <b>GhorerBazar CoA v1 (09-05-2026) with 5600 courier group</b></span>
+    <span>Status <b>Draft</b></span>
+    <span>Prepared by <b>Mir Tahajjat Hossain, Softifybd</b></span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tablist" role="tablist" id="tablist"></div>
+</nav>
+
+<main class="wrap" id="panels"></main>
+
+<footer class="wrap">Amounts are illustrative and exclude VAT. Account codes marked proposed are not yet in the CoA and need Finance approval before they appear in any FRS.</footer>
+
+<script>
+const N={"1407":"Finished Goods","1416":"Stock Goods at Metro outlet Uttara North","1441":"Transit Steadfast","1442":"Transit Office","1461":"A/R Steadfast Courier","1464":"A/R SD Office Delivery","1502":"A/R Anwar Ispat Ltd (corporate customer)","1602":"Advance Income Tax (AIT)","1604":"VAT Current Account (AR/AP)","1905":"Cash in Hand","1906":"Cash in Hand, Metro outlet Uttara North","1944":"SSL Commerce","1949":"City Bank PLC","1950":"Card Settlement Clearing","1981":"bKash Marchant (Dhaka)","1989":"bKash Marchant, Metro outlet Uttara North","3410":"Refundable to Customers","3529":"Advance Against Delivery","4003":"Sales Dhaka- Steadfast Courier","4008":"Sales Dhaka- Direct Office","4051":"Corporate Sales","4421":"Sales, Metro outlet Uttara North","4621":"Sales Discount, E-commerce","4651":"Delivery Charge Income","4701":"Return Dhaka- Steadfast Courier","4715":"Return, Metro outlet Uttara North","4720":"Return, Corporate","4915":"Income for Qurior Compensations","5015":"Product Damage","5022":"Cost of Goods Sold","5522":"Sales Discounts, Metro outlet Uttara North","5601":"SteadFast Courier Charges","5605":"In House Delivery Expense","5708":"bKash Commission","5709":"Card Commission","5710":"COD Collection Commission","5721":"SSL Commission","BANK":"Cash at Bank (1941 to 1949)"};
+const PROPOSED=new Set(["1950","4621","4651","4720"]);
+
+const CYCLES=[
+{id:"cod",tab:"E-commerce COD",title:"E-commerce cash on delivery through Steadfast",lead:"The standard path for a website order delivered by Steadfast. Revenue is recognized when the parcel is delivered, not when it leaves the warehouse. Steadfast is a collection agent, so it becomes the receivable.",
+scenario:"Product price 1,000, discount 50, delivery charge to customer 60, so the COD amount is 1,010. Cost of goods 600. Steadfast deducts its 60 delivery charge and a 1% cash handling charge (10.10) when it pays out.",
+track:["1441","1461"],steps:[
+{e:"Order placed on the website",g:"Sales order created",l:[]},
+{e:"Parcel handed to Steadfast",g:"Consignment created",l:[["Dr","1441",600],["Cr","1407",600]]},
+{e:"Delivered: recognize the sale",g:"Steadfast status: delivered",l:[["Dr","1461",1010],["Dr","4621",50],["Cr","4003",1000],["Cr","4651",60]]},
+{e:"Cost of sale",g:"Same delivered event",l:[["Dr","5022",600],["Cr","1441",600]]},
+{e:"Payment statement: courier charges",g:"Steadfast statement imported",l:[["Dr","5601",60],["Dr","5710",10.1],["Cr","1461",70.1]]},
+{e:"Payout received in bank",g:"Bank credit matched to statement",l:[["Dr","1949",939.9],["Cr","1461",939.9]]}],
+end:"Transit and A/R Steadfast both clear to zero. Each statement must satisfy: payout = COD collected − delivery and return charges − 1% of COD collected ± adjustments. Unmatched differences go to Un-Identified Receipts 3534."},
+{id:"exc",tab:"COD exceptions",title:"COD exceptions: refused, lost and returned parcels",lead:"What happens when a COD parcel does not end in a normal delivery. A parcel refused before delivery was never a sale, so it never touches the sales return account.",
+scenario:"A refused parcel (cost 400, return charge 30), a parcel lost by the courier (cost 500, compensation 500), and a customer return after delivery (sale 1,000, cost 600).",
+track:["1441","1461"],steps:[
+{e:"Refused parcel: dispatched",g:"Consignment created",l:[["Dr","1441",400],["Cr","1407",400]]},
+{e:"Refused parcel: stock back in warehouse",g:"Status returned, goods received",l:[["Dr","1407",400],["Cr","1441",400]]},
+{e:"Return charge on the refused parcel",g:"Statement line: return charge",l:[["Dr","5601",30],["Cr","1461",30]]},
+{e:"Lost parcel: dispatched",g:"Consignment created",l:[["Dr","1441",500],["Cr","1407",500]]},
+{e:"Lost parcel: write off the stock",g:"Status lost or damaged",l:[["Dr","5015",500],["Cr","1441",500]]},
+{e:"Lost parcel: compensation claim",g:"Claim accepted by Steadfast",l:[["Dr","1461",500],["Cr","4915",500]]},
+{e:"Return after delivery: reverse the sale",g:"Customer return approved",l:[["Dr","4701",1000],["Cr","3410",1000]]},
+{e:"Return after delivery: stock back",g:"Goods received",l:[["Dr","1407",600],["Cr","5022",600]]}],
+end:"Transit clears to zero. The 470 left in A/R Steadfast (500 claim less 30 return charge) is netted in the next Steadfast payout. For a partial delivery, post the delivered lines as a normal sale and the refused lines as a refused parcel."},
+{id:"pre",tab:"E-commerce prepaid",title:"E-commerce prepaid orders",lead:"The customer pays online before dispatch, so the money is held as an advance until delivery. No 1% cash handling charge applies, because the courier collects no cash.",
+scenario:"Customer pays 1,560 through SSL (1,500 goods plus 60 delivery). Cost 900. The SSL fee of 31.20 is illustrative.",
+track:["1944","3529","1441","1461"],steps:[
+{e:"Customer pays online",g:"Payment gateway success",l:[["Dr","1944",1560],["Cr","3529",1560]]},
+{e:"Parcel handed to Steadfast",g:"Consignment created with COD 0",l:[["Dr","1441",900],["Cr","1407",900]]},
+{e:"Delivered: recognize the sale",g:"Steadfast status: delivered",l:[["Dr","3529",1560],["Cr","4003",1500],["Cr","4651",60]]},
+{e:"Cost of sale",g:"Same delivered event",l:[["Dr","5022",900],["Cr","1441",900]]},
+{e:"SSL settles to bank",g:"SSL settlement report",l:[["Dr","BANK",1528.8],["Dr","5721",31.2],["Cr","1944",1560]]},
+{e:"Steadfast delivery charge",g:"Statement line, no COD",l:[["Dr","5601",60],["Cr","1461",60]]}],
+end:"The 60 credit left in A/R Steadfast is deducted from the next COD payout. For bKash or Nagad prepayment, use 1981 or 1986 in place of 1944, with the fee to 5708 or 5719."},
+{id:"off",tab:"Office delivery",title:"E-commerce office delivery",lead:"Orders delivered by GhorerBazar's own riders. The rider holds the cash until it is deposited at the office, so the receivable is the office delivery account.",
+scenario:"A COD order of 800 delivered by an in-house rider. Cost 480. No courier cash handling charge.",
+track:["1442","1464","1905"],steps:[
+{e:"Goods issued to the rider",g:"Delivery challan created",l:[["Dr","1442",480],["Cr","1407",480]]},
+{e:"Delivered: recognize the sale",g:"Rider marks delivered",l:[["Dr","1464",800],["Cr","4008",800]]},
+{e:"Cost of sale",g:"Same delivered event",l:[["Dr","5022",480],["Cr","1442",480]]},
+{e:"Rider deposits the cash",g:"Cash receipt at office",l:[["Dr","1905",800],["Cr","1464",800]]},
+{e:"Cash banked",g:"Bank deposit slip",l:[["Dr","BANK",800],["Cr","1905",800]]}],
+end:"All three control accounts clear to zero. Rider and fuel costs go to In House Delivery Expense 5605. For Chattogram office delivery, use Sales Ctg. - Direct Office 4015 and Return Ctg.- Office Delivery 4712."},
+{id:"corp",tab:"Corporate",title:"Corporate orders and sales",lead:"Credit sales to corporate customers. The sale is recognized when the customer accepts the delivery challan. Customers that are withholding entities deduct TDS and VDS at payment.",
+scenario:"Invoice 100,000 (cost 65,000) with a 20,000 advance. TDS 2,000 and VDS 3,000 are illustrative and come from the customer's certificates.",
+track:["3529","1502"],steps:[
+{e:"Quotation or sales order",g:"Sales order approved",l:[]},
+{e:"Advance received",g:"Bank receipt",l:[["Dr","BANK",20000],["Cr","3529",20000]]},
+{e:"Delivery accepted: invoice raised",g:"Challan signed, invoice posted",l:[["Dr","1502",100000],["Cr","4051",100000]]},
+{e:"Cost of sale",g:"Same invoice event",l:[["Dr","5022",65000],["Cr","1407",65000]]},
+{e:"Advance adjusted against the invoice",g:"Advance applied",l:[["Dr","3529",20000],["Cr","1502",20000]]},
+{e:"Balance collected net of TDS and VDS",g:"Bank receipt with certificates",l:[["Dr","BANK",75000],["Dr","1602",2000],["Dr","1604",3000],["Cr","1502",80000]]}],
+end:"Both accounts clear to zero. For goods returned later: Dr Return, Corporate 4720 (proposed), Cr the customer's A/R, then Dr 1407, Cr 5022 at cost. Campaign and lot sales follow this cycle with A/R 1479, 1480 or 1506 and Campaign Sales GP 4052."},
+{id:"pos",tab:"POS outlet",title:"POS sales at the metro outlets",lead:"Walk-in sales at an outlet, paid by cash, bKash or card. Each payment method has its own account so that every settlement can be matched separately.",
+scenario:"A day at Uttara North: gross sales 10,500, discount 500, net 10,000 paid as cash 5,000, bKash 3,000 and card 2,000. Cost 6,500. One cash refund of 400 (cost 260). Fees are illustrative.",
+track:["1906","1989","1950","1416"],steps:[
+{e:"Stock transferred to the outlet",g:"Transfer received at outlet",l:[["Dr","1416",7000],["Cr","1407",7000]]},
+{e:"Day's sales by payment method",g:"POS invoices or day-end summary",l:[["Dr","1906",5000],["Dr","1989",3000],["Dr","1950",2000],["Dr","5522",500],["Cr","4421",10500]]},
+{e:"Cost of sale",g:"Same POS invoices",l:[["Dr","5022",6500],["Cr","1416",6500]]},
+{e:"Customer return with cash refund",g:"POS return invoice",l:[["Dr","4715",400],["Cr","1906",400],["Dr","1416",260],["Cr","5022",260]]},
+{e:"Cash deposited",g:"Bank deposit slip",l:[["Dr","BANK",4600],["Cr","1906",4600]]},
+{e:"bKash merchant settlement",g:"bKash settlement report",l:[["Dr","BANK",2955],["Dr","5708",45],["Cr","1989",3000]]},
+{e:"Card settlement, next day",g:"Bank card settlement",l:[["Dr","BANK",1970],["Dr","5709",30],["Cr","1950",2000]]}],
+end:"Cash, bKash and card clearing all clear to zero; outlet stock keeps 760 on the shelf. The discount uses 5522 today and moves to contra-revenue 4623 if approved. Cross-store returns post against the outlet where the sale was made."}
+];
+
+const COURIERS=[
+["Steadfast","1441","1461","4003","4701","5601"],
+["Pathao","1444","1462","4010","4708","5604"],
+["Horse-e Courier (Ctg)","1448","1469","4013","4713","5602"],
+["Paperfly","1443","1475","4009","4709",""],
+["Janani","1445","1467","4005 / 4019","4702",""],
+["SA Paribahan","1446","1468","4006 / 4016","4703 / 4711",""],
+["Foring","1447","1466","4004","4706",""],
+["Sundarban","","1463","4017","4710",""],
+["AJR","","1473","4014","4714",""],
+["E-Courier","","1476","4012","4707",""],
+["GB-Express","","","","","5603"],
+["Office delivery (Dhaka)","1442","1464","4008","4704","5605"]];
+const OUTLETS=[
+["Uttara North","1906","1989","4421","4715","1416","5522"],
+["Shewrapara","1907","1990","4422","4716","1417","5523"],
+["Shahbag","1908","1991","4423","4717","1418","5524"],
+["Dhaka University","1909","1992","4424","4718","1419","5525"],
+["Secretariat","1910","1993","4425","4719","1420","5526"]];
+const CHECKS=[
+["Transit accounts","1441 to 1448","The balance equals parcels dispatched but not yet delivered or returned.","Age by consignment. Anything older than the courier's normal turnaround is a likely lost parcel or a missed return entry."],
+["Courier receivables","1461 to 1476, 1464","The balance equals COD delivered but not yet paid out.","Reconcile each courier to its merchant panel: COD collected − delivery and return charges − 1% cash handling = payout."],
+["Advance Against Delivery","3529","The balance equals orders paid for but not yet delivered.","Clear old advances: deliver the order or move the amount to Refundable to Customers 3410."],
+["Gateway, MFS and card clearing","1944, 1981 to 1993, 1950","Only one or two days of unsettled collections should remain.","Match each balance to the SSL, bKash, Nagad or bank card settlement report."],
+["Cash in hand","1905 to 1910","The balance equals physical cash at the office and each outlet.","Count cash at every outlet and the office, and post any shortage or excess."],
+["Un-Identified Receipts","3534","This should be zero or fully explained.","Trace each receipt to a courier statement, customer or order before closing."],
+["Corporate receivables","1494 to 1507","The balance equals unpaid corporate invoices.","Age each customer and collect the TDS and VDS certificates that support 1602 and 1604."],
+["Output VAT","Pending OQ-SAL-003","The balance equals VAT due on the month's sales.","Reconcile to the monthly VAT return once the account is decided."],
+["Cost of Goods Sold","5022","Should equal the cost of stock issued to delivered sales.","Tie to stock movement for 1407 and 1416 to 1420 for the period."]];
+const PROPOSALS=[
+["1950","Card Settlement Clearing","CASH AT BANK 1940","Card sales awaiting bank settlement at outlets"],
+["4621","Sales Discount, E-commerce","SALES DISCOUNT 4620","Contra-revenue under IFRS 15"],
+["4622","Sales Discount, Corporate","SALES DISCOUNT 4620","Contra-revenue under IFRS 15"],
+["4623","Sales Discount, Outlet","SALES DISCOUNT 4620","Replaces 5522 to 5526 if approved"],
+["4651","Delivery Charge Income","SERVICE REVENUE 4650","Delivery fee charged to the customer"],
+["4720","Return, Corporate","SALES RETURN 4700","Credit notes on corporate sales"],
+["3535","Output VAT Payable","OTHER CURRENT LIABILITIES 3520","Only if Finance does not use 3511 or 1604"]];
+const OQS=[
+["OQ-SAL-001","Revenue recognition point","Confirm revenue at delivery, and that the Deferred sales accounts 3522 to 3528 are retired for courier flows."],
+["OQ-SAL-002","Discount classification","Move discounts from selling expenses (5521 to 5526) to contra-revenue (4621 to 4623)."],
+["OQ-SAL-003","Output VAT","Which account (3511, 1604 or a new 3535), and the rate by channel."],
+["OQ-SAL-004","1% cash handling charge","Keep in COD Collection Commission 5710, or post to each courier's charge account 5601 to 5604. Also confirm VDS and TDS on courier fees."],
+["OQ-SAL-005","Delivery charge to customers","Treat as revenue (4651) rather than an offset against courier expense."],
+["OQ-SAL-006","GB-Express","Is it a separate courier channel needing Transit, A/R, Sales and Return accounts, or the office delivery team?"],
+["OQ-SAL-007","Missing courier accounts","Charge accounts for Paperfly, Janani, SA Paribahan, Foring, Sundarban, AJR and E-Courier, or one Other Courier Charges account. Transit accounts for Sundarban, AJR and E-Courier."],
+["OQ-SAL-008","Steadfast in Chattogram","If Steadfast delivers Chattogram orders, add a Sales Ctg.- Steadfast account."]];
+const DATAQ=[
+"5022 Cost of Goods Sold is used in the GB system but appears only on the Biznify sheet of the CoA file. Add it to the GhorerBazar COA sheet, directly under COST OF GOODS SOLD 5001.",
+"The 5600 header name has a leading space (\" Courier & Logistics Expenses\"). Trim it before import.",
+"Delivery Expenses-Sales 5509 and Carriage Outward-Sales 5505 overlap with 5601 to 5605. Freeze them for new courier postings.",
+"Corporate customers each have their own GL account (1494 to 1507). Move to one A/R control account with a customer subledger in the Level 5 CoA."];
+
+const fmt=v=>Number(v).toLocaleString('en-IN',{minimumFractionDigits:Number.isInteger(v)?0:2,maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const code=c=>c==="BANK"?"19xx":c;
+const acctName=c=>esc(N[c]||c)+(PROPOSED.has(c)?'<span class="pill">proposed</span>':'');
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const TABS=[{id:"overview",tab:"Overview"},...CYCLES.map(c=>({id:c.id,tab:c.tab})),{id:"close",tab:"Month-end close"},{id:"map",tab:"Account map"},{id:"open",tab:"Open items"}];
+const tablist=document.getElementById('tablist'),panels=document.getElementById('panels');
+
+function overviewHTML(){
+  return `<h2>How sales post to the ledger</h2>
+  <p class="lead">Six sales cycles share the same few rules. Each cycle tab walks through the entries step by step and shows the control accounts clearing as you go.</p>
+  <div class="principles">
+    <div class="pr"><h4>Revenue at delivery</h4><p>For courier and office delivery, the sale is posted when the parcel is delivered. Dispatch only moves stock into a transit account.</p></div>
+    <div class="pr"><h4>The courier is a collection agent</h4><p>COD cash collected by Steadfast or another courier is a receivable from that courier until it is paid into the bank.</p></div>
+    <div class="pr"><h4>Charges at settlement</h4><p>Delivery and return charges go to the courier's charge account (5601 for Steadfast). The 1% cash handling charge goes to COD Collection Commission 5710.</p></div>
+    <div class="pr"><h4>Refused is not returned</h4><p>A parcel refused before delivery reverses transit only. Sales return accounts are for goods returned after a completed sale.</p></div>
+    <div class="pr"><h4>One cost of sales account</h4><p>All channels post cost to 5022. Channel margin comes from the source document, not separate GL codes.</p></div>
+    <div class="pr"><h4>One account per payment method</h4><p>Cash, bKash, card and gateway collections each have their own account so every settlement report can be matched.</p></div>
+  </div>
+  <h3>Sales cycles</h3>
+  <div class="cyclelinks">${CYCLES.map(c=>`<button data-go="${c.id}"><b>${esc(c.tab)}</b><span>${esc(c.title)}</span></button>`).join('')}</div>
+  <div class="legend"><span><b class="dr">Dr</b> debit</span><span><b class="cr">Cr</b> credit, indented</span><span><span class="pill" style="margin-left:0">proposed</span> code not yet in the CoA</span></div>`;
+}
+
+function cycleHTML(c){
+  return `<h2>${esc(c.title)}</h2><p class="lead">${esc(c.lead)}</p>
+  <div class="scenario">${esc(c.scenario)}</div>
+  <div class="cycle">
+    <div><div class="steps" data-steps="${c.id}"></div>
+      <div class="controls"><button class="btn" data-prev="${c.id}">Previous step</button><button class="btn" data-next="${c.id}">Next step</button><span class="pos" data-pos="${c.id}"></span></div></div>
+    <aside class="ledger" aria-live="polite"><h4>Control accounts after this step</h4><div data-bal="${c.id}"></div><div class="totals" data-tot="${c.id}"></div><p class="endnote" data-end="${c.id}" hidden></p></aside>
+  </div>`;
+}
+
+function closeHTML(){
+  return `<h2>Month-end close</h2><p class="lead">Before closing the month, prove that each control account holds only what it should. Ticks are saved in this browser only.</p>
+  <p class="progress" id="closeProg"></p>
+  ${CHECKS.map((k,i)=>`<label class="check" data-ci="${i}"><input type="checkbox" data-chk="${i}"><div><b>${esc(k[0])}</b> <span class="acc">${esc(k[1])}</span><p>${esc(k[2])}</p><p style="color:var(--muted)">${esc(k[3])}</p></div></label>`).join('')}
+  <button class="btn" id="resetChecks">Clear ticks</button>`;
+}
+
+function mapHTML(){
+  const cell=v=>v?`<td>${esc(v)}</td>`:`<td class="miss">missing</td>`;
+  return `<h2>Account map</h2><p class="lead">Every courier and outlet follows the same cycle; only the accounts change. Missing accounts are listed in Open items.</p>
+  <h3>Couriers and delivery channels</h3>
+  <div class="tw"><table><thead><tr><th>Courier</th><th>Transit</th><th>A/R</th><th>Sales</th><th>Return after delivery</th><th>Courier charge</th></tr></thead><tbody>
+  ${COURIERS.map(r=>`<tr><td>${esc(r[0])}</td>${r.slice(1).map(cell).join('')}</tr>`).join('')}</tbody></table></div>
+  <h3>Metro outlets</h3>
+  <div class="tw"><table><thead><tr><th>Outlet</th><th>Cash</th><th>bKash</th><th>Sales</th><th>Return</th><th>Stock</th><th>Discount</th></tr></thead><tbody>
+  ${OUTLETS.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <h3>Shared accounts</h3>
+  <div class="tw"><table><thead><tr><th>Purpose</th><th>Account</th></tr></thead><tbody>
+  <tr><td>Warehouse stock</td><td>1407 Finished Goods</td></tr>
+  <tr><td>Cost of sales, all channels</td><td>5022 Cost of Goods Sold</td></tr>
+  <tr><td>1% cash handling charge</td><td>5710 COD Collection Commission</td></tr>
+  <tr><td>Customer advances</td><td>3529 Advance Against Delivery</td></tr>
+  <tr><td>Refunds owed to customers</td><td>3410 Refundable to Customers</td></tr>
+  <tr><td>Unmatched receipts</td><td>3534 Un-Identified Receipts</td></tr>
+  <tr><td>Courier advance payout</td><td>3530 Advance Receive from Steadfast Courier</td></tr>
+  <tr><td>Lost or damaged parcels</td><td>5015 Product Damage, 4915 Income for Qurior Compensations</td></tr>
+  <tr><td>Gateway and MFS fees</td><td>5721 SSL Commission, 5708 bKash Commission, 5719 Nagad Commission, 5709 Card Commission</td></tr>
+  <tr><td>TDS and VDS deducted by customers</td><td>1602 Advance Income Tax, 1604 VAT Current Account</td></tr>
+  </tbody></table></div>`;
+}
+
+function openHTML(){
+  return `<h2>Open items</h2><p class="lead">Decisions needed from Finance (Kazi Kawsar) before these flows go into the FRS.</p>
+  <h3>Proposed new accounts</h3>
+  <div class="tw"><table><thead><tr><th>Code</th><th>Account</th><th>Parent group</th><th>Purpose</th></tr></thead><tbody>
+  ${PROPOSALS.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <h3>Open questions</h3>
+  ${OQS.map(q=>`<div class="oq"><b>${esc(q[0])}: ${esc(q[1])}</b><p>${esc(q[2])}</p></div>`).join('')}
+  <h3>CoA file corrections</h3>
+  ${DATAQ.map(d=>`<div class="oq" style="border-left-color:var(--warn)"><p style="color:var(--ink)">${esc(d)}</p></div>`).join('')}`;
+}
+
+TABS.forEach((t,i)=>{
+  const b=document.createElement('button');
+  b.role='tab';b.id='tab-'+t.id;b.textContent=t.tab;b.setAttribute('aria-controls','panel-'+t.id);b.dataset.tab=t.id;
+  tablist.appendChild(b);
+  const p=document.createElement('section');
+  p.className='panel';p.id='panel-'+t.id;p.setAttribute('role','tabpanel');p.setAttribute('aria-labelledby','tab-'+t.id);p.tabIndex=0;
+  const c=CYCLES.find(x=>x.id===t.id);
+  p.innerHTML=t.id==='overview'?overviewHTML():c?cycleHTML(c):t.id==='close'?closeHTML():t.id==='map'?mapHTML():openHTML();
+  panels.appendChild(p);
+});
+
+const pos={};CYCLES.forEach(c=>pos[c.id]=0);
+
+function renderCycle(id){
+  const c=CYCLES.find(x=>x.id===id),si=pos[id];
+  const box=document.querySelector(`[data-steps="${id}"]`);
+  box.innerHTML=c.steps.map((s,i)=>{
+    const st=i===si?'cur':i<si?'done':'future';
+    const lines=s.l.length?s.l.map(l=>`<div class="ln ${l[0].toLowerCase()}"><span class="side">${l[0]}</span><span class="code">${code(l[1])}</span><span class="acct">${acctName(l[1])}</span><span class="amt">${fmt(l[2])}</span></div>`).join(''):`<div class="noentry">No GL entry</div>`;
+    return `<button class="step ${st}" data-step="${i}" aria-current="${i===si?'step':'false'}"><span class="num">${i+1}</span><span><span class="step-head"><span class="step-title">${esc(s.e)}</span><span class="trigger">${esc(s.g)}</span></span></span><span class="lines">${lines}</span></button>`;
+  }).join('');
+  box.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{pos[id]=+b.dataset.step;renderCycle(id)});
+  document.querySelector(`[data-pos="${id}"]`).textContent=`Step ${si+1} of ${c.steps.length}`;
+  const bal={};c.track.forEach(a=>bal[a]=0);let dr=0,cr=0;
+  c.steps.slice(0,si+1).forEach(s=>s.l.forEach(l=>{const v=l[2];if(l[0]==='Dr')dr+=v;else cr+=v;if(l[1] in bal)bal[l[1]]+=(l[0]==='Dr'?v:-v)}));
+  document.querySelector(`[data-bal="${id}"]`).innerHTML=c.track.map(a=>{const v=Math.round(bal[a]*100)/100;return `<div class="bal"><span class="nm"><b>${a}</b>${esc(N[a])}</span>${v===0?'<span class="v zero">Cleared</span>':`<span class="v">${fmt(Math.abs(v))} ${v>0?'Dr':'Cr'}</span>`}</div>`}).join('');
+  dr=Math.round(dr*100)/100;cr=Math.round(cr*100)/100;
+  document.querySelector(`[data-tot="${id}"]`).innerHTML=`<span>Total debits to date</span><span>${fmt(dr)}</span><span>Total credits to date</span><span>${fmt(cr)}</span><span>Journal check</span><span class="${dr===cr?'bal-ok':''}">${dr===cr?'Balanced':'Out by '+fmt(Math.abs(dr-cr))}</span>`;
+  const en=document.querySelector(`[data-end="${id}"]`);en.textContent=c.end;en.hidden=si!==c.steps.length-1;
+}
+CYCLES.forEach(c=>{
+  renderCycle(c.id);
+  document.querySelector(`[data-prev="${c.id}"]`).onclick=()=>{if(pos[c.id]>0){pos[c.id]--;renderCycle(c.id)}};
+  document.querySelector(`[data-next="${c.id}"]`).onclick=()=>{if(pos[c.id]<c.steps.length-1){pos[c.id]++;renderCycle(c.id)}};
+});
+
+function selectTab(id,focus){
+  if(!TABS.some(t=>t.id===id))id='overview';
+  tablist.querySelectorAll('[role=tab]').forEach(b=>{const on=b.dataset.tab===id;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;if(on&&focus)b.focus();if(on)b.scrollIntoView({block:'nearest',inline:'nearest'})});
+  panels.querySelectorAll('.panel').forEach(p=>p.hidden=p.id!=='panel-'+id);
+  store.set('gb-sales-tab',id);
+  if(location.hash!=='#'+id)history.replaceState(null,'','#'+id);
+}
+tablist.addEventListener('click',e=>{const b=e.target.closest('[role=tab]');if(b){selectTab(b.dataset.tab);const t=document.querySelector('nav.tabs').offsetTop;if(window.scrollY>t)window.scrollTo({top:t})}});
+tablist.addEventListener('keydown',e=>{
+  const ids=TABS.map(t=>t.id),cur=ids.indexOf(tablist.querySelector('[aria-selected="true"]').dataset.tab);
+  let n=null;if(e.key==='ArrowRight')n=(cur+1)%ids.length;if(e.key==='ArrowLeft')n=(cur-1+ids.length)%ids.length;if(e.key==='Home')n=0;if(e.key==='End')n=ids.length-1;
+  if(n!==null){e.preventDefault();selectTab(ids[n],true)}
+});
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{selectTab(b.dataset.go);window.scrollTo({top:document.querySelector('nav.tabs').offsetTop})});
+
+let checks={};try{checks=JSON.parse(store.get('gb-close-checks')||'{}')||{}}catch(e){checks={}}
+function renderChecks(){
+  let n=0;document.querySelectorAll('[data-chk]').forEach(cb=>{const on=!!checks[cb.dataset.chk];cb.checked=on;cb.closest('.check').classList.toggle('done',on);if(on)n++});
+  document.getElementById('closeProg').textContent=`${n} of ${CHECKS.length} checks done`;
+}
+document.querySelectorAll('[data-chk]').forEach(cb=>cb.onchange=()=>{checks[cb.dataset.chk]=cb.checked;store.set('gb-close-checks',JSON.stringify(checks));renderChecks()});
+document.getElementById('resetChecks').onclick=()=>{checks={};store.set('gb-close-checks','{}');renderChecks()};
+renderChecks();
+
+selectTab((location.hash||'').slice(1)||store.get('gb-sales-tab')||'overview');
+window.addEventListener('hashchange',()=>selectTab(location.hash.slice(1)));
+</script>
+</body>
+</html>
